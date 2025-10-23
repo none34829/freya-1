@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+.git
+.gitmodules
+.gitignore
+.DS_Store
+dist
+build
+.next
+app/.next
+agent/dist
+coverage
+tmp

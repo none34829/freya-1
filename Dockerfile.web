@@ -1,0 +1,55 @@
+# syntax=docker/dockerfile:1
+
+# ------------------------------
+# Base image
+# ------------------------------
+    FROM node:20-alpine AS base
+    WORKDIR /app
+    RUN corepack enable && corepack prepare pnpm@10.18.0 --activate
+    
+    # ------------------------------
+    # Dependencies stage
+    # ------------------------------
+    FROM base AS deps
+    COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+    COPY app/package.json ./app/package.json
+    RUN pnpm install --filter app... --prod=false --frozen-lockfile
+    
+    # ------------------------------
+    # Build stage
+    # ------------------------------
+    FROM deps AS build
+    COPY tsconfig.base.json ./
+    COPY app ./app
+    RUN pnpm --filter app build
+    
+    # ------------------------------
+    # Runtime stage
+    # ------------------------------
+    FROM node:20-alpine AS runner
+    WORKDIR /app
+    RUN corepack enable && corepack prepare pnpm@10.18.0 --activate
+    
+    ENV NODE_ENV=production
+    ENV PORT=3000
+    
+    # Copy minimal required files
+    COPY pnpm-workspace.yaml ./
+    COPY package.json ./
+    
+    # Copy build output (Next.js standalone)
+    COPY --from=build /app/app/.next/standalone ./standalone
+    COPY --from=build /app/app/.next/static ./standalone/app/.next/static
+    COPY --from=build /app/app/public ./standalone/app/public
+
+    # Ensure runtime data directory exists and is writable
+    RUN mkdir -p /app/standalone/app/data && chown -R node:node /app/standalone
+    
+    # Security best practices
+    USER node
+    
+    # Expose and run from correct directory
+    EXPOSE 3000
+    WORKDIR /app/standalone
+    CMD ["node", "app/server.js", "--port", "3000", "--hostname", "0.0.0.0"]
+    

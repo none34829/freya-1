@@ -1,0 +1,25 @@
+# Root ignores
+node_modules
+.pnpm-store
+
+# Build outputs
+app/.next
+app/out
+app/node_modules
+agent/dist
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs
+
+# Editor
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,55 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "3000:3000"
+    depends_on:
+      - agent
+    env_file:
+      - .env
+    environment:
+      PORT: ${PORT:-3000}
+      AGENT_HTTP_URL: http://agent:4001
+    volumes:
+      - ./data:/app/standalone/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  agent:
+    image: freya-1-agent
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    ports:
+      - "${AGENT_PORT:-4001}:4001"
+    env_file:
+      - .env
+    environment:
+      PORT: ${AGENT_PORT:-4001}
+    volumes:
+      - ./data:/workspace/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4001/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  agent-voice:
+    image: freya-1-agent
+    depends_on:
+      - agent
+    env_file:
+      - .env
+    environment:
+      PORT: ${AGENT_PORT:-4001}
+    command: ["sh", "-c", "node dist/livekit-agent.js download-files && node dist/livekit-agent.js start"]
+    restart: unless-stopped
