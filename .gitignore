@@ -7,11 +7,37 @@ app/.next
 app/out
 app/node_modules
 agent/dist
+dist/
+build/
+.cache/
+.vite/
+**/.turbo/
+
+# Testing
+coverage/
+**/coverage/
 
 # Environment
 .env
 .env.local
 .env.*.local
+!.env.example
+
+# Databases and local data
+data/**
+!data/.gitkeep
+app/data/**
+!app/data/.gitkeep
+
+# Media artifacts
+Recording*.mp3
+roundtrip*.mp3
+reply*.mp3
+*.wav
+
+# Ad-hoc outputs
+response.json
+responsse.json
 
 # Logs
 *.log
